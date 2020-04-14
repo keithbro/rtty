@@ -11,7 +11,7 @@ pp = pprint.PrettyPrinter(indent=4)
 message = "CQ AB1HL FN42"
 ascii = message.encode('ascii')
 
-CHUNK = 1024
+# CHUNK = 1024
 SAMPLE_RATE = 8000
 SECONDS = 1
 BAUD = 45.45
@@ -38,14 +38,20 @@ output_stream = p.open(rate=SAMPLE_RATE,
 
 signal2 = np.ndarray(shape=(1,0), dtype=np.int16)
 
-# 8000 / 1024 * 1 = 7.8 = 7
-# 8000 samples / 45.45 BAUD = 176 per CHUNK
+def decode(data):
+  print("OK")
 
-for i in range(0, int(SAMPLE_RATE / CHUNK * SECONDS)):
+# 8000 / 1024 * 1 = 7.8 = 7
+# 8000 samples / 45.45 BAUD * SECONDS * 1 = 176 reads
+
+for i in range(0, int(SAMPLE_RATE / BAUD * SECONDS)):
     data = input_stream.read(CHUNK)
+    frequencies = decode(data)
     print(len(data))
-    decoded = np.frombuffer(data, dtype=np.int16)
-    signal2 = np.append(signal2, decoded)
+    #decoded = np.frombuffer(data, dtype=np.int16)
+    #signal2 = np.append(signal2, decoded)
+
+exit()
 
 input_stream.stop_stream()
 input_stream.close()
