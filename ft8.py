@@ -4,6 +4,7 @@ import pyaudio
 import pprint
 import sys
 import re
+import time
 
 # np.set_printoptions(threshold=sys.maxsize)
 
@@ -12,10 +13,11 @@ pp = pprint.PrettyPrinter(indent=4)
 message = "CQ AB1HL FN42"
 ascii = message.encode('ascii')
 
-# CHUNK = 1024
-SAMPLE_RATE = 8000
-SECONDS = 1
-BAUD = 45.45
+SAMPLE_RATE = 22050
+SECONDS = 3
+BAUD = 100
+# BIT_RATE = BAUD * 8 # 364
+CHUNK = int(SAMPLE_RATE / BAUD) # 61
 f = 490
 volume = 20000
 
@@ -39,7 +41,7 @@ output_stream = p.open(rate=SAMPLE_RATE,
 
 signal2 = np.ndarray(shape=(1,0), dtype=np.int16)
 
-CHUNK = int(SAMPLE_RATE/BAUD)
+
 
 def decode(data):
   decoded = np.frombuffer(data, dtype=np.int16)
@@ -58,6 +60,7 @@ def decode(data):
   idx = np.argmax(np.abs(bins))
   freq = freqs[idx]
   freq_in_hertz = abs(freq * SAMPLE_RATE)
+  # print(freq_in_hertz)
   if freq_in_hertz > 950:
     return "1"
   else:
@@ -69,74 +72,77 @@ def decode(data):
 
 res = []
 
-for i in range(0, int(SAMPLE_RATE / BAUD * SECONDS)):
+for i in range(0, int(BAUD * SECONDS)):
     data = input_stream.read(CHUNK)
     res.append(decode(data))
     decoded = np.frombuffer(data, dtype=np.int16)
     signal2 = np.append(signal2, decoded)
+
+output_stream.write(signal2)
 
 print("".join(res))
 
 # https://www.dcode.fr/baudot-code
 baudot = {
   "L": {
-    "10000": "A",
-    "00110": "B",
+    "00011": "A", #
+    "11001": "B", #
     "01110": "C", #
-    "01000": "E",
+    "01001": "D", #
+    "00001": "E", #
     "01101": "F", #
     "11010": "G", #
-    "10100": "H",
+    "10100": "H", #
+    "00110": "I", #
+    "01011": "J", #
     "01111": "K", #
-    "10010": "L",
-    "01011": "M",
+    "10010": "L", #
+    "11100": "M", #
     "01100": "N", #
-    "11100": "O",
+    "11000": "O", #
     "10110": "P", #
-    "10111": "Q",
+    "10111": "Q", #
     "01010": "R", #
-    "00101": "S",
-    "10101": "T",
+    "00101": "S", #
+    "10000": "T", #
     "00111": "U", #
-    "11110": "V",
-    "": "W",
-    "01001": "X",
-    "00100": "Y",
-    "11001": "Z",
-    "11000": "/",
-    "10001": "-",
-    "00010": "FS",
-    "11111": " ",
+    "11110": "V", #
+    "10011": "W", #
+    "11101": "X", #
+    "10101": "Y", #
+    "10001": "Z", #
+    "11011": "FS", #
+    "11111": " ", #
+    "00100": " ", #
+    "00010": "\n",
+    "01000": "\r",
   },
   "F": {
     "00010": " ",
+    "00100": " ",
+    "00011": "-",
     "11010": "&",
     "10100": "#",
     "11100": ".",
     "11110": ";",
+    "01110": ":",
+    "01111": "{",
+    "10001": "\"",
+    "11101": "/",
+    "01101": "!",
     "10110": "0",
+    "10111": "1",
     "01010": "4",
     "00111": "7",
     "11000": "9",
+    "00101": "BELL",
     "11111": "LS",
-  }
-}
-
-baudot2 = {
-  "L": {
-    "11000": "A",
-    "10011": "B",
-    "10110": "F",
-    "01001": "L",
-    "11100": "U",
-    "01111": "V",
-    "10001": "Z",
+    "00010": "\n",
   }
 }
 
 mode = "L"
 pos = 0
-lock = False
 
 def fs(mode):
   if mode == "L":
@@ -145,31 +151,37 @@ def fs(mode):
     return "L"
 
 while pos < len(res):
-  c = res[pos:pos+5]
+  c = res[pos:pos+7]
   bit_str = "".join(c)
-  x = re.match(r'^0.+11$', bit_str)
+  x = re.match(r'^0[0,1]{5}1$', bit_str)
 
   if x is None:
     pos += 1
-    next
+    continue
 
-  lock = True
-  pos += 5
+  char = bit_str[1:6]
+  if True:
+    char = "".join(reversed(char))
+  
+  pos += 7
 
   try:
-    decoded = baudot[mode][bit_str]
+    ddd = baudot[mode][char]
+
+    if ddd == "FS":
+      mode = "F"
+    elif ddd == "LS":
+      mode = "L"
+    else:
+      print(ddd, end="")
   except:
     print("ERROR")
     print("mode: " + mode)
-    print("binary: " + bit_str)
+    print("binary: " + char)
 
-  if decoded == "FS":
-    mode = "F"
-  elif decoded == "LS":
-    mode = "L"
-  else:
-    print(decoded)
+
 
 input_stream.stop_stream()
 input_stream.close()
-output_stream.write(signal2)
+
+time.sleep(2)
