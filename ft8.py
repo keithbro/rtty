@@ -13,8 +13,8 @@ pp = pprint.PrettyPrinter(indent=4)
 message = "CQ AB1HL FN42"
 ascii = message.encode('ascii')
 
-SAMPLE_RATE = 22050
-SECONDS = 5
+SAMPLE_RATE = 8000
+SECONDS = 10
 BAUD = 45.45
 # BIT_RATE = BAUD * 8 # 364
 CHUNK = int(SAMPLE_RATE / BAUD) # 61
@@ -85,6 +85,7 @@ print("".join(res))
 # https://www.dcode.fr/baudot-code
 baudot = {
   "L": {
+    "00000": "", # NULL
     "00011": "A", #
     "11001": "B", #
     "01110": "C", #
@@ -115,7 +116,7 @@ baudot = {
     "11111": " ", #
     "00100": " ", #
     "00010": "\n",
-    "01000": "\r",
+    "01000": "\n", # \r
   },
   "F": {
     "00010": " ",
@@ -135,12 +136,17 @@ baudot = {
     "10110": "0",
     "10111": "1",
     "10011": "2",
+    "00001": "3",
     "01010": "4",
+    "10000": "5",
+    "10101": "6",
     "00111": "7",
+    "00110": "8",
     "11000": "9",
     "00101": "BELL",
     "11111": "LS",
     "00010": "\n",
+    "01000": "\n", # \r
   }
 }
 
@@ -178,11 +184,7 @@ while pos < len(res):
     else:
       print(ddd, end="")
   except:
-    print("ERROR")
-    print("mode: " + mode)
-    print("binary: " + char)
-
-
+    print("ERROR: mode: " + mode + ", binary: " + char)
 
 input_stream.stop_stream()
 input_stream.close()
