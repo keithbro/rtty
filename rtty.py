@@ -5,27 +5,20 @@ import pprint
 import sys
 import re
 import time
+import logging
 
-# np.set_printoptions(threshold=sys.maxsize)
+logger = logging.getLogger('rtty')
+logger.setLevel(logging.DEBUG)
 
-pp = pprint.PrettyPrinter(indent=4)
+ch = logging.FileHandler('debug.log')
+ch.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
 
-message = "CQ AB1HL FN42"
-ascii = message.encode('ascii')
+logger.addHandler(ch)
 
 SAMPLE_RATE = 8000
-SECONDS = 3
-BAUD = 45.45
-# BIT_RATE = BAUD * 8 # 364
+BAUD = 50
 CHUNK_SIZE = int(SAMPLE_RATE / BAUD) # 61
 REVERSE_BITS = True
-f = 490
-volume = 20000
-
-samples = np.linspace(0, SECONDS, int(SAMPLE_RATE * SECONDS), endpoint=False)
-signal = np.sin(2 * np.pi * f * samples) * volume
-signal = np.int16(signal)
-
 
 # https://www.dcode.fr/baudot-code
 baudot = {
@@ -64,16 +57,20 @@ baudot = {
     "01000": "\n", # \r
   },
   "F": {
+    "00000": "", # NULL
     "00010": " ",
     "00100": " ",
     "00011": "-",
     "11010": "&",
     "10100": "#",
+    "01001": "$",
     "11100": ".",
     "01100": ",",
     "11110": ";",
+    "01011": "'",
     "01110": ":",
     "01111": "{",
+    "10010": ")",
     "10001": "\"",
     "11101": "/",
     "11001": "?",
@@ -89,6 +86,7 @@ baudot = {
     "00110": "8",
     "11000": "9",
     "00101": "BELL",
+    "11011": " ",
     "11111": "LS",
     "00010": "\n",
     "01000": "\n", # \r
@@ -100,7 +98,7 @@ p = pyaudio.PyAudio()
 input_stream = p.open(rate=SAMPLE_RATE,
                       channels=1,
                       format=pyaudio.paInt16,
-                      input_device_index=2,
+                      input_device_index=4,
                       input=True)
 
 output_stream = p.open(rate=SAMPLE_RATE,
@@ -112,6 +110,7 @@ output_stream = p.open(rate=SAMPLE_RATE,
 signal2 = np.ndarray(shape=(1,0), dtype=np.int16)
 
 def decode_chunk(chunk):
+  
   decoded = np.frombuffer(chunk, dtype=np.int16)
   bins = np.fft.fft(decoded)
   freqs = np.fft.fftfreq(len(bins))
@@ -129,10 +128,10 @@ def decode_chunk(chunk):
   freq = freqs[idx]
   freq_in_hertz = abs(freq * SAMPLE_RATE)
   # print(freq_in_hertz)
-  if freq_in_hertz > 950:
-    return "1"
-  else:
+  if freq_in_hertz > 1000:
     return "0"
+  else:
+    return "1"
 
 def fs(mode):
   if mode == "L":
@@ -140,19 +139,23 @@ def fs(mode):
   elif mode == "F":
     return "L"
 
-
 def xxx(bits, mode):
-  # print(bits)
+  logger.debug(bits)
   bit_str = "".join(bits)
   # print(bit_str)
+
+  if bits[0] == "1":
+    return [], mode
 
   if(len(bits) < 7):
     return bits, mode
 
-  if re.match(r'^0[0,1]{5}1$', bit_str) is None:
+  if re.match(r'^0(0|1){5}1$', bit_str) is None:
     return bits[1:], mode
 
+  #print(bit_str)
   symbol_bits = bit_str[1:6]
+  #print(symbol_bits)
   if REVERSE_BITS:
     symbol_bits = "".join(reversed(symbol_bits))
 
@@ -164,7 +167,8 @@ def xxx(bits, mode):
     elif symbol == "LS":
       mode = "L"
     else:
-      print(symbol, end="", flush=True)
+      logger.info("Symbol: \"" + symbol + "\"")
+      False or print(symbol, end="", flush=True)
   except:
     print("ERROR: mode: " + mode + ", binary: " + symbol_bits)
 
@@ -174,10 +178,18 @@ bits = []
 mode = "L"
 
 while True:
-  chunk = input_stream.read(CHUNK_SIZE)
+  if len(bits) == 6:
+    logger.debug("Preparing for stop bit")
+    chunk_size = int(CHUNK_SIZE * 1.5)
+  else:
+    chunk_size = CHUNK_SIZE
+  
+  logger.debug("chunk size: " + str(chunk_size))
+  chunk = input_stream.read(chunk_size)
   # print(chunk)
   output_stream.write(chunk)
 
   bit = decode_chunk(chunk)
+  # print(bit, end="")
   bits.append(bit)
   bits, mode = xxx(bits, mode)
