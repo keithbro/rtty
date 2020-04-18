@@ -66,8 +66,11 @@ def decode_to_bit(chunk):
   
 bits = []
 
+while chunk = input_stream.read(CHUNK_SIZE):
+  print(chunk)
+
 for i in range(0, int(BAUD * SECONDS)):
-  chunk = input_stream.read(CHUNK_SIZE)
+  
   bits.append(decode_to_bit(chunk))
   decoded = np.frombuffer(chunk, dtype=np.int16)
   signal2 = np.append(signal2, decoded)
