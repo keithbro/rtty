@@ -14,10 +14,10 @@ message = "CQ AB1HL FN42"
 ascii = message.encode('ascii')
 
 SAMPLE_RATE = 8000
-SECONDS = 10
+SECONDS = 3
 BAUD = 45.45
 # BIT_RATE = BAUD * 8 # 364
-CHUNK = int(SAMPLE_RATE / BAUD) # 61
+CHUNK_SIZE = int(SAMPLE_RATE / BAUD) # 61
 f = 490
 volume = 20000
 
@@ -41,10 +41,8 @@ output_stream = p.open(rate=SAMPLE_RATE,
 
 signal2 = np.ndarray(shape=(1,0), dtype=np.int16)
 
-
-
-def decode(data):
-  decoded = np.frombuffer(data, dtype=np.int16)
+def decode_to_bit(chunk):
+  decoded = np.frombuffer(chunk, dtype=np.int16)
   bins = np.fft.fft(decoded)
   freqs = np.fft.fftfreq(len(bins))
 
@@ -66,21 +64,17 @@ def decode(data):
   else:
     return "0"
   
-
-# 8000 / 1024 * 1 = 7.8 = 7
-# 8000 samples / 45.45 BAUD * SECONDS * 1 = 176 reads
-
-res = []
+bits = []
 
 for i in range(0, int(BAUD * SECONDS)):
-    data = input_stream.read(CHUNK)
-    res.append(decode(data))
-    decoded = np.frombuffer(data, dtype=np.int16)
-    signal2 = np.append(signal2, decoded)
+  chunk = input_stream.read(CHUNK_SIZE)
+  bits.append(decode_to_bit(chunk))
+  decoded = np.frombuffer(chunk, dtype=np.int16)
+  signal2 = np.append(signal2, decoded)
 
 output_stream.write(signal2)
 
-print("".join(res))
+print("".join(bits))
 
 # https://www.dcode.fr/baudot-code
 baudot = {
@@ -159,8 +153,8 @@ def fs(mode):
   elif mode == "F":
     return "L"
 
-while pos < len(res):
-  c = res[pos:pos+7]
+while pos < len(bits):
+  c = bits[pos:pos+7]
   bit_str = "".join(c)
   x = re.match(r'^0[0,1]{5}1$', bit_str)
 
