@@ -188,5 +188,3 @@ while pos < len(res):
 
 input_stream.stop_stream()
 input_stream.close()
-
-time.sleep(2)
