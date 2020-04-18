@@ -14,8 +14,8 @@ message = "CQ AB1HL FN42"
 ascii = message.encode('ascii')
 
 SAMPLE_RATE = 22050
-SECONDS = 3
-BAUD = 75
+SECONDS = 5
+BAUD = 45.45
 # BIT_RATE = BAUD * 8 # 364
 CHUNK = int(SAMPLE_RATE / BAUD) # 61
 f = 490
@@ -124,6 +124,7 @@ baudot = {
     "11010": "&",
     "10100": "#",
     "11100": ".",
+    "01100": ",",
     "11110": ";",
     "01110": ":",
     "01111": "{",
