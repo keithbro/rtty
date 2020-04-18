@@ -109,8 +109,7 @@ output_stream = p.open(rate=SAMPLE_RATE,
 
 signal2 = np.ndarray(shape=(1,0), dtype=np.int16)
 
-def decode_chunk(chunk):
-  
+def decode_chunk(chunk, frequencies):
   decoded = np.frombuffer(chunk, dtype=np.int16)
   bins = np.fft.fft(decoded)
   freqs = np.fft.fftfreq(len(bins))
@@ -126,9 +125,18 @@ def decode_chunk(chunk):
   # print(sorted_by_second)
   idx = np.argmax(np.abs(bins))
   freq = freqs[idx]
-  freq_in_hertz = abs(freq * SAMPLE_RATE)
-  # print(freq_in_hertz)
-  if freq_in_hertz > 1000:
+  freq_in_hertz = int(abs(freq * SAMPLE_RATE))
+  logger.debug("Dominant frequency: " + str(freq_in_hertz) + 'Hz')
+
+  if len(frequencies) > 50:
+    frequencies.pop(0)
+
+  frequencies.append(freq_in_hertz)
+  logger.debug(frequencies)
+  average_freq = np.average(frequencies)
+  logger.debug("Average dominant freq: " + str(average_freq))
+
+  if freq_in_hertz > average_freq:
     return "0"
   else:
     return "1"
@@ -176,20 +184,22 @@ def xxx(bits, mode):
   
 bits = []
 mode = "L"
+frequencies = []
 
 while True:
+  logger.debug("Fetching another bit...")
   if len(bits) == 6:
-    logger.debug("Preparing for stop bit")
+    logger.debug("Expecting a stop bit.")
     chunk_size = int(CHUNK_SIZE * 1.5)
   else:
     chunk_size = CHUNK_SIZE
   
-  logger.debug("chunk size: " + str(chunk_size))
+  logger.debug("Reading chunk of size: " + str(chunk_size))
   chunk = input_stream.read(chunk_size)
   # print(chunk)
   output_stream.write(chunk)
 
-  bit = decode_chunk(chunk)
+  bit = decode_chunk(chunk, frequencies)
   # print(bit, end="")
   bits.append(bit)
   bits, mode = xxx(bits, mode)
