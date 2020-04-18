@@ -18,6 +18,7 @@ SECONDS = 3
 BAUD = 45.45
 # BIT_RATE = BAUD * 8 # 364
 CHUNK_SIZE = int(SAMPLE_RATE / BAUD) # 61
+REVERSE_BITS = True
 f = 490
 volume = 20000
 
@@ -25,59 +26,6 @@ samples = np.linspace(0, SECONDS, int(SAMPLE_RATE * SECONDS), endpoint=False)
 signal = np.sin(2 * np.pi * f * samples) * volume
 signal = np.int16(signal)
 
-p = pyaudio.PyAudio()
-
-input_stream = p.open(rate=SAMPLE_RATE,
-                      channels=1,
-                      format=pyaudio.paInt16,
-                      input_device_index=4,
-                      input=True)
-
-output_stream = p.open(rate=SAMPLE_RATE,
-                       channels=1,
-                       format=pyaudio.paInt16,
-                       output_device_index=1,
-                       output=True)
-
-signal2 = np.ndarray(shape=(1,0), dtype=np.int16)
-
-def decode_to_bit(chunk):
-  decoded = np.frombuffer(chunk, dtype=np.int16)
-  bins = np.fft.fft(decoded)
-  freqs = np.fft.fftfreq(len(bins))
-
-  x = []
-  for idx, bin in enumerate(bins):
-    freq = int(abs(freqs[idx] * SAMPLE_RATE))
-    amp = np.abs(bin)
-    x.append((freq, amp))
-
-  sorted_by_second = sorted(x, key=lambda tup: tup[1])
-
-  # print(sorted_by_second)
-  idx = np.argmax(np.abs(bins))
-  freq = freqs[idx]
-  freq_in_hertz = abs(freq * SAMPLE_RATE)
-  # print(freq_in_hertz)
-  if freq_in_hertz > 950:
-    return "1"
-  else:
-    return "0"
-  
-bits = []
-
-while chunk = input_stream.read(CHUNK_SIZE):
-  print(chunk)
-
-for i in range(0, int(BAUD * SECONDS)):
-  
-  bits.append(decode_to_bit(chunk))
-  decoded = np.frombuffer(chunk, dtype=np.int16)
-  signal2 = np.append(signal2, decoded)
-
-output_stream.write(signal2)
-
-print("".join(bits))
 
 # https://www.dcode.fr/baudot-code
 baudot = {
@@ -147,8 +95,44 @@ baudot = {
   }
 }
 
-mode = "L"
-pos = 0
+p = pyaudio.PyAudio()
+
+input_stream = p.open(rate=SAMPLE_RATE,
+                      channels=1,
+                      format=pyaudio.paInt16,
+                      input_device_index=2,
+                      input=True)
+
+output_stream = p.open(rate=SAMPLE_RATE,
+                       channels=1,
+                       format=pyaudio.paInt16,
+                       output_device_index=1,
+                       output=True)
+
+signal2 = np.ndarray(shape=(1,0), dtype=np.int16)
+
+def decode_chunk(chunk):
+  decoded = np.frombuffer(chunk, dtype=np.int16)
+  bins = np.fft.fft(decoded)
+  freqs = np.fft.fftfreq(len(bins))
+
+  x = []
+  for idx, bin in enumerate(bins):
+    freq = int(abs(freqs[idx] * SAMPLE_RATE))
+    amp = np.abs(bin)
+    x.append((freq, amp))
+
+  sorted_by_second = sorted(x, key=lambda tup: tup[1])
+
+  # print(sorted_by_second)
+  idx = np.argmax(np.abs(bins))
+  freq = freqs[idx]
+  freq_in_hertz = abs(freq * SAMPLE_RATE)
+  # print(freq_in_hertz)
+  if freq_in_hertz > 950:
+    return "1"
+  else:
+    return "0"
 
 def fs(mode):
   if mode == "L":
@@ -156,32 +140,44 @@ def fs(mode):
   elif mode == "F":
     return "L"
 
-while pos < len(bits):
-  c = bits[pos:pos+7]
-  bit_str = "".join(c)
-  x = re.match(r'^0[0,1]{5}1$', bit_str)
 
-  if x is None:
-    pos += 1
-    continue
+def xxx(bits, mode):
+  # print(bits)
+  bit_str = "".join(bits)
+  # print(bit_str)
 
-  char = bit_str[1:6]
-  if True:
-    char = "".join(reversed(char))
-  
-  pos += 7
+  if(len(bits) < 7):
+    return bits, mode
+
+  if re.match(r'^0[0,1]{5}1$', bit_str) is None:
+    return bits[1:], mode
+
+  symbol_bits = bit_str[1:6]
+  if REVERSE_BITS:
+    symbol_bits = "".join(reversed(symbol_bits))
 
   try:
-    ddd = baudot[mode][char]
+    symbol = baudot[mode][symbol_bits]
 
-    if ddd == "FS":
+    if symbol == "FS":
       mode = "F"
-    elif ddd == "LS":
+    elif symbol == "LS":
       mode = "L"
     else:
-      print(ddd, end="")
+      print(symbol, end="", flush=True)
   except:
-    print("ERROR: mode: " + mode + ", binary: " + char)
+    print("ERROR: mode: " + mode + ", binary: " + symbol_bits)
 
-input_stream.stop_stream()
-input_stream.close()
+  return [], mode
+  
+bits = []
+mode = "L"
+
+while True:
+  chunk = input_stream.read(CHUNK_SIZE)
+  # print(chunk)
+  output_stream.write(chunk)
+
+  bit = decode_chunk(chunk)
+  bits.append(bit)
+  bits, mode = xxx(bits, mode)
