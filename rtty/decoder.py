@@ -5,7 +5,7 @@ class Decoder:
   START_BIT = 0
   STOP_BIT = 1
 
-  def __init__(self, sample_rate, baud, shift, logger):
+  def __init__(self, sample_rate, baud, shift, stop_bits, inverted, logger):
     self.frequencies = []
     self.confidences = []
     self.bits = []
@@ -13,7 +13,8 @@ class Decoder:
     self.baud = baud
     self.shift = shift
     self.logger = logger
-    self.stop_bits = 1
+    self.stop_bits = stop_bits
+    self.inverted = inverted
 
   def chunk_size(self):
     chunk_size = self.sample_rate / self.baud
@@ -31,11 +32,6 @@ class Decoder:
     decoded = np.frombuffer(chunk, dtype=np.int16)
     bins = np.fft.fft(decoded)
     freqs = np.fft.fftfreq(len(bins))
-
-    idx = np.argmax(np.abs(bins))
-    freq = freqs[idx]
-    freq_in_hertz = int(abs(freq * self.sample_rate))
-    self.logger.debug("Dominant frequency: " + str(freq_in_hertz) + 'Hz')
 
     freq_amplitudes = {}
     for idx, bin in enumerate(bins):
@@ -82,21 +78,18 @@ class Decoder:
     self.logger.debug("Confidence: " + str(int(confidence)) + "%")
     self.logger.debug("Average Confidence: " + str(np.average(self.confidences)) + '%')
 
-    # TODO: Implement option
-    if diff > 0:
+    if diff < 0 and self.inverted or diff > 0 and not self.inverted:
       bit = 1
     else:
       bit = 0
 
     self.logger.debug("Bit: " + str(bit))
 
-    self.bits.append(bit)
     return bit
 
   def process(self, bit):
+    self.bits.append(bit)
     self.logger.debug(self.bits)
-    bit_str = "".join(map(str, self.bits))
-    # print(bit_str)
 
     if self.bits[0] != self.START_BIT:
       self.bits = []

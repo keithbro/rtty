@@ -23,8 +23,10 @@ logger.addHandler(ch)
 SAMPLE_RATE = 8000
 BAUD = 50
 SHIFT = 450 # Hz
+STOP_BITS = 1
 CHUNK_SIZE = int(SAMPLE_RATE / BAUD) # 61
 REVERSE_BITS = True
+INVERTED = True
 
 p = pyaudio.PyAudio()
 
@@ -42,7 +44,7 @@ output_stream = p.open(rate=SAMPLE_RATE,
 
 signal2 = np.ndarray(shape=(1,0), dtype=np.int16)
 
-signal_decoder = rtty.Decoder(SAMPLE_RATE, BAUD, SHIFT, logger)
+signal_decoder = rtty.Decoder(SAMPLE_RATE, BAUD, SHIFT, STOP_BITS, INVERTED, logger)
 ita2_decoder = rtty.Ita2(REVERSE_BITS, logger)
 
 while True:
