@@ -1,5 +1,6 @@
 import re
 import numpy as np
+from random import randrange
 
 class Decoder:
   START_BIT = 0
@@ -104,3 +105,37 @@ class Decoder:
     
     self.bits = []
     return data_bits
+
+  def synchronise(self, input_stream):
+    print("Synchronizing...")
+    while True:
+      chunk = input_stream.read(randrange(self.sample_rate) + int(self.sample_rate / 2))
+      decoded = np.frombuffer(chunk, dtype=np.int16)
+      bins = np.fft.fft(decoded)
+      freqs = np.fft.fftfreq(len(bins))
+      freq_amplitudes = {}
+      for idx, bin in enumerate(bins):
+        freq = int(abs(freqs[idx] * self.sample_rate))
+        amp = np.abs(bin)
+        if freq_amplitudes.get(freq):
+          freq_amplitudes[freq] = freq_amplitudes.get(freq) + amp
+        else:
+          freq_amplitudes[freq] = amp
+
+      sorted_by_amp = {
+        k: v for k, v in sorted(freq_amplitudes.items(), key=lambda item: item[1], reverse=True)
+      }
+
+      max_amp = list(sorted_by_amp.values())[0]
+      dominant_freq = list(sorted_by_amp.keys())[0]
+      self.logger.debug("Dominant: " + str(dominant_freq) + "Hz @ " + str(max_amp))
+
+      for freq in sorted_by_amp.keys():
+        amp = sorted_by_amp[freq]
+
+        if abs(dominant_freq - freq) > (self.shift / 2):
+          self.logger.debug("Inactive: " + str(freq) + "Hz @ " + str(amp) + " = " + str(int(amp/max_amp*100)) + "%")
+          if amp/max_amp < 0.2:
+            return
+          else:
+            break
