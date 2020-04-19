@@ -45,7 +45,7 @@ class Decoder:
     sorted_by_amp = {
       k: v for k, v in sorted(freq_amplitudes.items(), key=lambda item: item[1], reverse=True)
     }
-    self.logger.debug(sorted_by_amp)
+    # self.logger.debug(sorted_by_amp)
     max_amp = list(sorted_by_amp.values())[0]
     dominant_freq = list(sorted_by_amp.keys())[0]
   
