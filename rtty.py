@@ -15,8 +15,13 @@ ch.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(me
 
 logger.addHandler(ch)
 
+# Tested on:
+# 4582.97KHz
+# http://meinsdr.ddns.net:8073/
+
 SAMPLE_RATE = 8000
 BAUD = 50
+SHIFT = 450 # Hz
 CHUNK_SIZE = int(SAMPLE_RATE / BAUD) # 61
 REVERSE_BITS = True
 
@@ -54,7 +59,7 @@ baudot = {
     "11111": " ", #
     "00100": " ", #
     "00010": "\n",
-    "01000": "\n", # \r
+    "01000": "", # \r
   },
   "F": {
     "00000": "", # NULL
@@ -89,7 +94,7 @@ baudot = {
     "11011": " ",
     "11111": "LS",
     "00010": "\n",
-    "01000": "\n", # \r
+    "01000": "", # \r
   }
 }
 
@@ -109,34 +114,57 @@ output_stream = p.open(rate=SAMPLE_RATE,
 
 signal2 = np.ndarray(shape=(1,0), dtype=np.int16)
 
-def decode_chunk(chunk, frequencies):
+def decode_chunk(chunk, frequencies, confidences):
   decoded = np.frombuffer(chunk, dtype=np.int16)
   bins = np.fft.fft(decoded)
   freqs = np.fft.fftfreq(len(bins))
 
-  x = []
+  freq_amplitudes = {}
   for idx, bin in enumerate(bins):
     freq = int(abs(freqs[idx] * SAMPLE_RATE))
     amp = np.abs(bin)
-    x.append((freq, amp))
+    if freq_amplitudes.get(freq):
+      freq_amplitudes[freq] = freq_amplitudes.get(freq) + amp
+    else:
+      freq_amplitudes[freq] = amp
 
-  sorted_by_second = sorted(x, key=lambda tup: tup[1])
-
-  # print(sorted_by_second)
-  idx = np.argmax(np.abs(bins))
-  freq = freqs[idx]
-  freq_in_hertz = int(abs(freq * SAMPLE_RATE))
-  logger.debug("Dominant frequency: " + str(freq_in_hertz) + 'Hz')
-
+  sorted_by_amp = {
+    k: v for k, v in sorted(freq_amplitudes.items(), key=lambda item: item[1], reverse=True)
+  }
+  logger.debug(sorted_by_amp)
+  max_amp = list(sorted_by_amp.values())[0]
+  dominant_freq = list(sorted_by_amp.keys())[0]
+ 
   if len(frequencies) > 50:
     frequencies.pop(0)
 
-  frequencies.append(freq_in_hertz)
-  logger.debug(frequencies)
-  average_freq = np.average(frequencies)
-  logger.debug("Average dominant freq: " + str(average_freq))
+  if len(confidences) > 50:
+    confidences = [np.average(confidences)]
 
-  if freq_in_hertz > average_freq:
+  frequencies.append(dominant_freq)
+  # logger.debug(frequencies)
+  average_freq = np.average(frequencies)
+  diff = dominant_freq - average_freq
+  if diff > 0:
+    inactive_freq = dominant_freq - SHIFT
+  else:
+    inactive_freq = dominant_freq + SHIFT
+
+  logger.debug("Highest freq: "     + str(np.max(frequencies)) + 'Hz')
+  logger.debug("Lowest freq: "      + str(np.min(frequencies)) + 'Hz')
+  logger.debug("Average dominant freq: " + str(average_freq) + 'Hz')
+  logger.debug("Dominant freq: "    + str(dominant_freq) + 'Hz')
+  logger.debug("Inactive freq: "    + str(inactive_freq) + 'Hz')
+
+  confidence_freq = abs(diff)
+  confidence = confidence_freq / (SHIFT / 2) * 100
+  confidences.append(confidence)
+
+  logger.debug("Confidence freq: " + str(confidence_freq) + "Hz")
+  logger.debug("Confidence: " + str(int(confidence)) + "%")
+  logger.debug("Average Confidence: " + str(np.average(confidences)) + '%')
+
+  if diff > 0:
     return "0"
   else:
     return "1"
@@ -175,7 +203,7 @@ def xxx(bits, mode):
     elif symbol == "LS":
       mode = "L"
     else:
-      logger.info("Symbol: \"" + symbol + "\"")
+      # logger.info("Symbol: \"" + symbol + "\"")
       False or print(symbol, end="", flush=True)
   except:
     print("ERROR: mode: " + mode + ", binary: " + symbol_bits)
@@ -185,11 +213,12 @@ def xxx(bits, mode):
 bits = []
 mode = "L"
 frequencies = []
+confidences = []
 
 while True:
   logger.debug("Fetching another bit...")
   if len(bits) == 6:
-    logger.debug("Expecting a stop bit.")
+    # logger.debug("Expecting a stop bit.")
     chunk_size = int(CHUNK_SIZE * 1.5)
   else:
     chunk_size = CHUNK_SIZE
@@ -199,7 +228,7 @@ while True:
   # print(chunk)
   output_stream.write(chunk)
 
-  bit = decode_chunk(chunk, frequencies)
+  bit = decode_chunk(chunk, frequencies, confidences)
   # print(bit, end="")
   bits.append(bit)
   bits, mode = xxx(bits, mode)
