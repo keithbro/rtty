@@ -16,10 +16,6 @@ ch.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(me
 
 logger.addHandler(ch)
 
-# Tested on:
-# 4582.97KHz
-# http://meinsdr.ddns.net:8073/
-
 SAMPLE_RATE = 8000
 BAUD = 50
 SHIFT = 450 # Hz
