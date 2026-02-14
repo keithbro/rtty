@@ -1,6 +1,7 @@
 # Waterfall/Spectrogram Visualization
 
 Status: **done**
+PR: https://github.com/keithbro/rtty/pull/7
 
 ## Description
 Use matplotlib to render a live spectrogram while decoding. Seeing the two FSK tones visually helps with debugging and is a great way to understand what the decoder is actually doing.
