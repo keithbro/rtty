@@ -18,26 +18,32 @@ class Waterfall:
     self.rows.append(row)
 
   def show(self):
-    """Render the accumulated spectrogram using matplotlib with log-scaled amplitudes."""
+    """Render the accumulated spectrogram in dB scale."""
     import matplotlib.pyplot as plt
-    from matplotlib.colors import LogNorm
 
     if not self.rows:
       return
 
     data = np.array(self.rows)
-    # Clamp zeros to a small value so log scale doesn't break.
-    data = np.maximum(data, 1e-10)
+    # Convert to dB relative to the peak amplitude.
+    peak = data.max()
+    if peak == 0:
+      return
+    db = 20 * np.log10(np.maximum(data, 1e-10) / peak)
+    # Clamp to -80 dB floor so empty bins don't dominate.
+    db = np.maximum(db, -80)
 
     plt.figure(figsize=(12, 6))
     plt.imshow(
-      data.T,
+      db.T,
       aspect='auto',
       origin='lower',
       extent=[0, len(self.rows), 0, self.max_freq],
-      norm=LogNorm(),
+      cmap='inferno',
+      vmin=-80,
+      vmax=0,
     )
-    plt.colorbar(label='Amplitude')
+    plt.colorbar(label='Amplitude (dB)')
     plt.xlabel('Time (chunks)')
     plt.ylabel('Frequency (Hz)')
     plt.title('RTTY Spectrogram')
