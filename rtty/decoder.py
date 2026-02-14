@@ -35,9 +35,9 @@ class Decoder:
     freqs = np.fft.fftfreq(len(bins))
 
     freq_amplitudes = {}
-    for idx, bin in enumerate(bins):
+    for idx, fft_bin in enumerate(bins):
       freq = int(abs(freqs[idx] * self.sample_rate))
-      amp = np.abs(bin)
+      amp = np.abs(fft_bin)
       if freq_amplitudes.get(freq):
         freq_amplitudes[freq] = freq_amplitudes.get(freq) + amp
       else:
@@ -49,7 +49,7 @@ class Decoder:
     # self.logger.debug(sorted_by_amp)
     max_amp = list(sorted_by_amp.values())[0]
     dominant_freq = list(sorted_by_amp.keys())[0]
-  
+
     if len(self.frequencies) > 50:
       self.frequencies.pop(0)
 
@@ -116,9 +116,9 @@ class Decoder:
       bins = np.fft.fft(decoded)
       freqs = np.fft.fftfreq(len(bins))
       freq_amplitudes = {}
-      for idx, bin in enumerate(bins):
+      for idx, fft_bin in enumerate(bins):
         freq = int(abs(freqs[idx] * self.sample_rate))
-        amp = np.abs(bin)
+        amp = np.abs(fft_bin)
         if freq_amplitudes.get(freq):
           freq_amplitudes[freq] = freq_amplitudes.get(freq) + amp
         else:
