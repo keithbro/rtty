@@ -8,7 +8,7 @@ class Decoder:
   START_BIT = 0
   STOP_BIT = 1
 
-  def __init__(self, sample_rate, baud, shift, stop_bits, inverted, logger):
+  def __init__(self, sample_rate, baud, shift, stop_bits, inverted, logger, on_fft=None):
     self.frequencies = deque(maxlen=50)
     self.confidences = []
     self.bits = []
@@ -18,6 +18,7 @@ class Decoder:
     self.logger = logger
     self.stop_bits = stop_bits
     self.inverted = inverted
+    self.on_fft = on_fft
 
   def chunk_size(self):
     chunk_size = self.sample_rate / self.baud
@@ -52,6 +53,8 @@ class Decoder:
 
     decoded = np.frombuffer(chunk, dtype=np.int16)
     sorted_by_amp = self._freq_amplitudes(decoded)
+    if self.on_fft is not None:
+      self.on_fft(sorted_by_amp)
     # self.logger.debug(sorted_by_amp)
     dominant_freq = list(sorted_by_amp.keys())[0]
 

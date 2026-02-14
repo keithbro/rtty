@@ -94,6 +94,26 @@ def test_synchronise_timeout():
     decoder.synchronise(NoiseStream(), timeout=0.1)
 
 
+def test_on_fft_callback_invoked():
+  """decode() calls the on_fft callback with a freq_amplitudes dict."""
+  received = []
+  def on_fft(freq_amplitudes):
+    received.append(freq_amplitudes)
+
+  decoder = Decoder(SAMPLE_RATE, BAUD, SHIFT, STOP_BITS, inverted=True, logger=logger, on_fft=on_fft)
+  # Generate a 1kHz tone chunk
+  t = np.arange(int(SAMPLE_RATE / BAUD)) / SAMPLE_RATE
+  tone = (np.sin(2 * np.pi * 1000 * t) * 10000).astype(np.int16)
+  decoder.decode(tone.tobytes())
+
+  assert len(received) == 1
+  assert isinstance(received[0], dict)
+  # Should contain integer freq keys and float amplitude values
+  for freq, amp in received[0].items():
+    assert isinstance(freq, int)
+    assert isinstance(amp, float) or isinstance(amp, np.floating)
+
+
 def test_synchronise_no_timeout():
   decoder = make_decoder()
   # With timeout=None and a stream that hits EOF, should return without raising.

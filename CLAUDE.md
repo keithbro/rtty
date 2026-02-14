@@ -9,20 +9,26 @@ RTTY (Radio Teletype) signal decoder — a Python learning experiment that decod
 ## Running
 
 ```bash
-python main.py
+python3 main.py
 ```
 
-Dependencies are in `requirements.txt` (`numpy`, `pyaudio`, `pytest`). Install with `pip3 install -r requirements.txt`.
+Dependencies are in `requirements.txt` (`matplotlib`, `numpy`, `pyaudio`, `pytest`). Install with `pip3 install -r requirements.txt`.
 
 Audio device indices in `main.py` are hardcoded (input=4, output=1) and will need adjusting per machine.
 
 To decode a WAV file offline:
 
 ```bash
-python decode_wav.py --skip-sync tests/fixtures/rtty_450hz_50bd.wav
+python3 decode_wav.py --skip-sync tests/fixtures/rtty_450hz_50bd.wav
 ```
 
-Flags: `--skip-sync`, `--no-invert`, `--no-reverse-bits`, `--baud`, `--shift`, `--stop-bits`.
+Flags: `--skip-sync`, `--no-invert`, `--no-reverse-bits`, `--baud`, `--shift`, `--stop-bits`, `--waterfall`.
+
+To decode a WAV file with a spectrogram visualization (requires `matplotlib`):
+
+```bash
+python3 decode_wav.py --skip-sync --waterfall tests/fixtures/rtty_450hz_50bd.wav
+```
 
 ## Architecture
 
@@ -79,6 +85,7 @@ When raising a PR that completes a task, include the task file update in the sam
 
 ## Code Style
 
+- Always use `python3` (not `python`) in commands and instructions.
 - Every new function should have a one-line comment explaining what it does.
 
 ## Workflow Preferences
