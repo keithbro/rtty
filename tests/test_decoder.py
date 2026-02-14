@@ -82,7 +82,19 @@ class NoiseStream:
     return samples.tobytes()
 
 
+class EofStream:
+  """Stream that returns EOF immediately."""
+  def read(self, num_samples):
+    return b''
+
+
 def test_synchronise_timeout():
   decoder = make_decoder()
   with pytest.raises(TimeoutError, match="Synchronisation timed out"):
     decoder.synchronise(NoiseStream(), timeout=0.1)
+
+
+def test_synchronise_no_timeout():
+  decoder = make_decoder()
+  # With timeout=None and a stream that hits EOF, should return without raising.
+  decoder.synchronise(EofStream(), timeout=None)

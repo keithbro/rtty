@@ -111,9 +111,9 @@ class Decoder:
   def synchronise(self, input_stream, timeout=30):
     # Calibrate by finding dominant and inactive frequencies, with a timeout.
     print("Synchronizing...")
-    deadline = time.monotonic() + timeout
+    deadline = time.monotonic() + timeout if timeout is not None else None
     while True:
-      if time.monotonic() > deadline:
+      if deadline is not None and time.monotonic() > deadline:
         raise TimeoutError("Synchronisation timed out after " + str(timeout) + " seconds — no signal detected")
       chunk = input_stream.read(randrange(self.sample_rate) + int(self.sample_rate / 2))
       decoded = np.frombuffer(chunk, dtype=np.int16)
