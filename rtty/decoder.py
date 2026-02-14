@@ -111,6 +111,8 @@ class Decoder:
     while True:
       chunk = input_stream.read(randrange(self.sample_rate) + int(self.sample_rate / 2))
       decoded = np.frombuffer(chunk, dtype=np.int16)
+      if len(decoded) == 0:
+        return
       bins = np.fft.fft(decoded)
       freqs = np.fft.fftfreq(len(bins))
       freq_amplitudes = {}
