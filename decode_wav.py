@@ -14,6 +14,8 @@ def main():
   parser.add_argument('--skip-sync', action='store_true', help='Skip synchronization phase')
   parser.add_argument('--sync-timeout', type=float, default=30,
                       help='Sync timeout in seconds (0 for no timeout, default: 30)')
+  parser.add_argument('--waterfall', action='store_true',
+                      help='Show a live spectrogram while decoding (requires matplotlib)')
   args = parser.parse_args()
 
   logger = logging.getLogger('rtty')
@@ -22,10 +24,17 @@ def main():
   ch.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
   logger.addHandler(ch)
 
+  waterfall = None
+  on_fft = None
+  if args.waterfall:
+    from rtty.waterfall import Waterfall
+    waterfall = Waterfall(max_freq=4000)
+    on_fft = waterfall.update
+
   stream = rtty.WavStream(args.wav_file)
   decoder = rtty.Decoder(
     stream.sample_rate, args.baud, args.shift, args.stop_bits,
-    not args.no_invert, logger,
+    not args.no_invert, logger, on_fft=on_fft,
   )
   ita2 = rtty.Ita2(not args.no_reverse_bits, logger)
 
@@ -57,6 +66,9 @@ def main():
 
   print()
   stream.close()
+
+  if waterfall is not None:
+    waterfall.show()
 
 
 if __name__ == '__main__':

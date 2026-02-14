@@ -8,12 +8,12 @@ FIXTURE_DIR = os.path.join(os.path.dirname(__file__), 'fixtures')
 WAV_FILE = os.path.join(FIXTURE_DIR, 'rtty_450hz_50bd.wav')
 
 
-def decode_wav(wav_path, inverted=False, reverse_bits=True):
+def decode_wav(wav_path, inverted=False, reverse_bits=True, on_fft=None):
   """Decode an RTTY WAV file and return the decoded text."""
   stream = WavStream(wav_path)
   decoder = Decoder(
     stream.sample_rate, baud=50, shift=450, stop_bits=1.5,
-    inverted=inverted, logger=logger,
+    inverted=inverted, logger=logger, on_fft=on_fft,
   )
   ita2 = Ita2(reverse_bits=reverse_bits, logger=logger)
 
@@ -77,3 +77,15 @@ def test_wav_stream_eof():
   data = stream.read(160)
   assert data == b''
   stream.close()
+
+
+def test_on_fft_collects_spectrogram_data():
+  """Decoding a WAV with on_fft callback accumulates FFT snapshots."""
+  from rtty.waterfall import Waterfall
+  wf = Waterfall(max_freq=4000)
+  decode_wav(WAV_FILE, inverted=False, reverse_bits=True, on_fft=wf.update)
+
+  # Should have collected many snapshots (one per decoded chunk)
+  assert len(wf.rows) > 10
+  # Each row should span the full frequency range
+  assert len(wf.rows[0]) == 4000
