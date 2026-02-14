@@ -1,5 +1,7 @@
 # Add synchronisation timeout
 
+Status: **open**
+
 ## Description
 Handle the case where `synchronise()` loops forever when no signal is present. Add a configurable timeout so the decoder gives up gracefully instead of hanging indefinitely.
 

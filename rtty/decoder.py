@@ -1,4 +1,3 @@
-import re
 import numpy as np
 from random import randrange
 
@@ -47,7 +46,6 @@ class Decoder:
       k: v for k, v in sorted(freq_amplitudes.items(), key=lambda item: item[1], reverse=True)
     }
     # self.logger.debug(sorted_by_amp)
-    max_amp = list(sorted_by_amp.values())[0]
     dominant_freq = list(sorted_by_amp.keys())[0]
 
     if len(self.frequencies) > 50:
@@ -102,7 +100,7 @@ class Decoder:
     data_bits = []
     if bit == self.STOP_BIT:
       data_bits = self.bits[1:6]
-    
+
     self.bits = []
     return data_bits
 

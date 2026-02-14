@@ -1,5 +1,7 @@
 # Extract duplicated FFT logic
 
+Status: **open**
+
 ## Description
 Extract the duplicated FFT-to-frequency-amplitude logic that is shared between `decode()` and `synchronise()` in `rtty/decoder.py` into a shared helper method. This reduces duplication and makes the FFT logic easier to modify in one place.
 
