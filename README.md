@@ -7,7 +7,13 @@ And also with https://www.sigidwiki.com/wiki/RTTY
 
 ## Getting Started
 
-Install dependencies:
+Install PortAudio (required by PyAudio):
+
+```bash
+brew install portaudio
+```
+
+Install Python dependencies:
 
 ```bash
 pip3 install -r requirements.txt
