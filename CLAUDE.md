@@ -51,3 +51,23 @@ python3 -m pytest tests/
 - `tests/test_ita2.py` — Unit tests for ITA2 character decoding and shift modes
 - `tests/test_decoder.py` — Unit tests for bit framing and chunk sizing
 - `tests/test_wav_decode.py` — Integration tests decoding `tests/fixtures/rtty_450hz_50bd.wav` end-to-end (expects "THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG 0123456789")
+
+## Project Planning
+
+Work is tracked in `docs/initiatives/` using a three-level hierarchy:
+
+- **Initiatives** — Top-level folders representing broad goals (e.g. `engineering-health/`, `new-decoders/`).
+- **Features** — Subfolders under an initiative for multi-task efforts (e.g. `new-decoders/cw-morse/`). Contains an `overview.md` describing the feature's scope.
+- **Tasks** — Individual `.md` files describing a single piece of work. Can live directly under an initiative (for standalone tasks) or under a feature folder.
+
+Task files follow this format:
+
+```markdown
+# Title
+
+## Description
+What and why.
+
+## Notes
+Implementation hints, references.
+```
