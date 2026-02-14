@@ -18,19 +18,24 @@ class Waterfall:
     self.rows.append(row)
 
   def show(self):
-    """Render the accumulated spectrogram using matplotlib."""
+    """Render the accumulated spectrogram using matplotlib with log-scaled amplitudes."""
     import matplotlib.pyplot as plt
+    from matplotlib.colors import LogNorm
 
     if not self.rows:
       return
 
     data = np.array(self.rows)
+    # Clamp zeros to a small value so log scale doesn't break.
+    data = np.maximum(data, 1e-10)
+
     plt.figure(figsize=(12, 6))
     plt.imshow(
       data.T,
       aspect='auto',
       origin='lower',
       extent=[0, len(self.rows), 0, self.max_freq],
+      norm=LogNorm(),
     )
     plt.colorbar(label='Amplitude')
     plt.xlabel('Time (chunks)')
