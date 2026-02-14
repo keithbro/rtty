@@ -27,6 +27,7 @@ class Decoder:
       return int(chunk_size)
 
   def _freq_amplitudes(self, decoded):
+    # Run FFT on audio samples and return frequency amplitudes sorted by strength.
     bins = np.fft.fft(decoded)
     freqs = np.fft.fftfreq(len(bins))
 
