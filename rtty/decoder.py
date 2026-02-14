@@ -26,12 +26,7 @@ class Decoder:
     else:
       return int(chunk_size)
 
-  def decode(self, chunk):
-    # self.logger.debug(chunk)
-    if int.from_bytes(chunk, "big") == 0:
-      return
-
-    decoded = np.frombuffer(chunk, dtype=np.int16)
+  def _freq_amplitudes(self, decoded):
     bins = np.fft.fft(decoded)
     freqs = np.fft.fftfreq(len(bins))
 
@@ -44,9 +39,17 @@ class Decoder:
       else:
         freq_amplitudes[freq] = amp
 
-    sorted_by_amp = {
+    return {
       k: v for k, v in sorted(freq_amplitudes.items(), key=lambda item: item[1], reverse=True)
     }
+
+  def decode(self, chunk):
+    # self.logger.debug(chunk)
+    if int.from_bytes(chunk, "big") == 0:
+      return
+
+    decoded = np.frombuffer(chunk, dtype=np.int16)
+    sorted_by_amp = self._freq_amplitudes(decoded)
     # self.logger.debug(sorted_by_amp)
     dominant_freq = list(sorted_by_amp.keys())[0]
 
@@ -110,20 +113,8 @@ class Decoder:
       decoded = np.frombuffer(chunk, dtype=np.int16)
       if len(decoded) == 0:
         return
-      bins = np.fft.fft(decoded)
-      freqs = np.fft.fftfreq(len(bins))
-      freq_amplitudes = {}
-      for idx, fft_bin in enumerate(bins):
-        freq = int(abs(freqs[idx] * self.sample_rate))
-        amp = np.abs(fft_bin)
-        if freq_amplitudes.get(freq):
-          freq_amplitudes[freq] = freq_amplitudes.get(freq) + amp
-        else:
-          freq_amplitudes[freq] = amp
 
-      sorted_by_amp = {
-        k: v for k, v in sorted(freq_amplitudes.items(), key=lambda item: item[1], reverse=True)
-      }
+      sorted_by_amp = self._freq_amplitudes(decoded)
 
       max_amp = list(sorted_by_amp.values())[0]
       dominant_freq = list(sorted_by_amp.keys())[0]
