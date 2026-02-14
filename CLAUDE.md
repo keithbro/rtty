@@ -12,7 +12,7 @@ RTTY (Radio Teletype) signal decoder — a Python learning experiment that decod
 python3 main.py
 ```
 
-Dependencies are in `requirements.txt` (`numpy`, `pyaudio`, `pytest`). Install with `pip3 install -r requirements.txt`.
+Dependencies are in `requirements.txt` (`matplotlib`, `numpy`, `pyaudio`, `pytest`). Install with `pip3 install -r requirements.txt`.
 
 Audio device indices in `main.py` are hardcoded (input=4, output=1) and will need adjusting per machine.
 
