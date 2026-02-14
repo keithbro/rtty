@@ -1,5 +1,7 @@
 # SSTV (Slow-Scan TV) Decoder
 
+Status: **open**
+
 ## Description
 Decode SSTV images transmitted over radio. Frequency maps to pixel brightness, and scan lines build up an image row by row. A natural next step from audio-to-text into audio-to-image.
 

@@ -1,5 +1,7 @@
 # CW (Morse Code) Decoder
 
+Status: **open**
+
 ## Description
 Decode CW (Morse code) signals from audio. Morse uses on/off keying of a single tone rather than FSK with two frequencies, introducing variable-length character encoding and timing-based detection of dots, dashes, and gaps.
 

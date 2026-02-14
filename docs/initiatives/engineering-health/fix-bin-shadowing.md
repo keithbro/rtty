@@ -1,5 +1,8 @@
 # Fix `bin` variable shadowing
 
+Status: **done**
+PR: https://github.com/keithbro/rtty/pull/1
+
 ## Description
 Rename the `bin` variable in `rtty/decoder.py` to avoid shadowing the Python builtin `bin()`. Use a more descriptive name like `freq_bin` or `fft_bin`.
 

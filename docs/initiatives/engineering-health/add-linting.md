@@ -1,5 +1,8 @@
 # Add linting
 
+Status: **done**
+PR: https://github.com/keithbro/rtty/pull/2
+
 ## Description
 Add a Python linter (ruff) to catch code quality issues like builtin shadowing, unused imports, and style violations. Configure it with sensible defaults for the project.
 

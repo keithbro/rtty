@@ -65,9 +65,14 @@ Task files follow this format:
 ```markdown
 # Title
 
+Status: **open** | **done**
+PR: (link when done)
+
 ## Description
 What and why.
 
 ## Notes
 Implementation hints, references.
 ```
+
+When raising a PR that completes a task, include the task file update in the same PR: set the status to **done** and add the PR link. This way the task is marked done as part of the merge — no follow-up needed.

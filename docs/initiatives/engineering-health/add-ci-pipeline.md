@@ -1,5 +1,7 @@
 # Add CI pipeline for PRs
 
+Status: **open**
+
 ## Description
 Add a GitHub Actions workflow that runs linting and tests on every pull request, so issues are caught before merge.
 

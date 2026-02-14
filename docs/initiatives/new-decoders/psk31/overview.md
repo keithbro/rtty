@@ -1,5 +1,7 @@
 # PSK31 Decoder
 
+Status: **open**
+
 ## Description
 Decode PSK31 signals, which use phase-shift keying instead of frequency-shift keying. This teaches a fundamentally different modulation scheme and introduces Varicode, a variable-length character encoding.
 
