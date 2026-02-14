@@ -12,6 +12,8 @@ def main():
   parser.add_argument('--no-reverse-bits', action='store_true')
   parser.add_argument('--no-invert', action='store_true')
   parser.add_argument('--skip-sync', action='store_true', help='Skip synchronization phase')
+  parser.add_argument('--sync-timeout', type=float, default=30,
+                      help='Sync timeout in seconds (0 for no timeout, default: 30)')
   args = parser.parse_args()
 
   logger = logging.getLogger('rtty')
@@ -28,7 +30,8 @@ def main():
   ita2 = rtty.Ita2(not args.no_reverse_bits, logger)
 
   if not args.skip_sync:
-    decoder.synchronise(stream)
+    timeout = args.sync_timeout if args.sync_timeout > 0 else None
+    decoder.synchronise(stream, timeout=timeout)
 
   while True:
     chunk_size = decoder.chunk_size()

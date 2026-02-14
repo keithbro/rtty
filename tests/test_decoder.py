@@ -1,4 +1,8 @@
 import logging
+
+import numpy as np
+import pytest
+
 from rtty import Decoder
 
 logger = logging.getLogger('test')
@@ -69,3 +73,28 @@ def test_chunk_size_stop_bit():
   decoder.bits = [0, 1, 0, 0, 0, 1]
   expected = int((SAMPLE_RATE / BAUD) * STOP_BITS)
   assert decoder.chunk_size() == expected
+
+
+class NoiseStream:
+  """Stream that returns random noise, never producing a clear RTTY signal."""
+  def read(self, num_samples):
+    samples = np.random.randint(-100, 100, size=num_samples, dtype=np.int16)
+    return samples.tobytes()
+
+
+class EofStream:
+  """Stream that returns EOF immediately."""
+  def read(self, num_samples):
+    return b''
+
+
+def test_synchronise_timeout():
+  decoder = make_decoder()
+  with pytest.raises(TimeoutError, match="Synchronisation timed out"):
+    decoder.synchronise(NoiseStream(), timeout=0.1)
+
+
+def test_synchronise_no_timeout():
+  decoder = make_decoder()
+  # With timeout=None and a stream that hits EOF, should return without raising.
+  decoder.synchronise(EofStream(), timeout=None)
