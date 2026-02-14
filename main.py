@@ -1,10 +1,6 @@
 
 import numpy as np
 import pyaudio
-import pprint
-import sys
-import re
-import time
 import logging
 import rtty
 
@@ -47,7 +43,7 @@ signal_decoder.synchronise(input_stream)
 
 while True:
   chunk_size = signal_decoder.chunk_size()
-  
+
   chunk = input_stream.read(chunk_size)
   output_stream.write(chunk)
 

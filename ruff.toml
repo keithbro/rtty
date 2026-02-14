@@ -1,0 +1,13 @@
+target-version = "py39"
+line-length = 120
+
+[lint]
+select = [
+    "F",     # pyflakes
+    "E",     # pycodestyle errors
+    "W",     # pycodestyle warnings
+    "A",     # flake8-builtins (catches builtin shadowing)
+]
+ignore = [
+    "E501",  # line too long (handled by formatter if we adopt one later)
+]
