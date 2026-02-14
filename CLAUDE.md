@@ -77,6 +77,10 @@ Implementation hints, references.
 
 When raising a PR that completes a task, include the task file update in the same PR: set the status to **done** and add the PR link. This way the task is marked done as part of the merge — no follow-up needed.
 
+## Code Style
+
+- Every new function should have a one-line comment explaining what it does.
+
 ## Workflow Preferences
 
 - When asked to "pick up" a task: choose which task yourself if the user hasn't specified one, and always commit and open a PR when finished.
