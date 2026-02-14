@@ -1,6 +1,7 @@
 # Add synchronisation timeout
 
-Status: **open**
+Status: **done**
+PR: https://github.com/keithbro/rtty/pull/6
 
 ## Description
 Handle the case where `synchronise()` loops forever when no signal is present. Add a configurable timeout so the decoder gives up gracefully instead of hanging indefinitely.
