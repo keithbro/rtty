@@ -1,6 +1,7 @@
 # Replace `list.pop(0)` with `deque`
 
-Status: **open**
+Status: **done**
+PR: https://github.com/keithbro/rtty/pull/4
 
 ## Description
 Replace the `list.pop(0)` pattern with `collections.deque(maxlen=50)` for O(1) pops instead of O(n) list shifts.

@@ -1,12 +1,14 @@
-import numpy as np
+from collections import deque
 from random import randrange
+
+import numpy as np
 
 class Decoder:
   START_BIT = 0
   STOP_BIT = 1
 
   def __init__(self, sample_rate, baud, shift, stop_bits, inverted, logger):
-    self.frequencies = []
+    self.frequencies = deque(maxlen=50)
     self.confidences = []
     self.bits = []
     self.sample_rate = sample_rate
@@ -47,9 +49,6 @@ class Decoder:
     }
     # self.logger.debug(sorted_by_amp)
     dominant_freq = list(sorted_by_amp.keys())[0]
-
-    if len(self.frequencies) > 50:
-      self.frequencies.pop(0)
 
     if len(self.confidences) > 50:
       self.confidences = [np.average(self.confidences)]
